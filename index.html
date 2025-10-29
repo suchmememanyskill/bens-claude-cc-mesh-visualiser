@@ -38,7 +38,6 @@
             padding: 30px;
             margin-bottom: 30px;
             border: 2px dashed #4a4a4a;
-            text-align: center;
             transition: border-color 0.3s;
         }
 
@@ -46,9 +45,49 @@
             border-color: #6a6a6a;
         }
 
+        .instructions {
+            text-align: left;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #3a3a3a;
+            border-radius: 8px;
+        }
+
+        .instructions h3 {
+            color: #ffffff;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .gcode-link {
+            color: #4da6ff;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 2px 6px;
+            background: rgba(77, 166, 255, 0.1);
+            border-radius: 3px;
+            transition: background 0.3s;
+        }
+
+        .gcode-link:hover {
+            background: rgba(77, 166, 255, 0.2);
+            text-decoration: underline;
+        }
+
         .file-input-wrapper {
             position: relative;
-            display: inline-block;
+            display: flex;
+            width: 100%;
+            justify-content: center;
         }
 
         input[type="file"] {
@@ -74,6 +113,7 @@
             margin-top: 15px;
             color: #aaa;
             font-size: 14px;
+            text-align: center;
         }
 
         .info-section {
@@ -201,6 +241,19 @@
         <h1>Centauri Carbon Bed Mesh Visualizer</h1>
 
         <div class="upload-section">
+            <div class="instructions">
+                <h3>Instructions:</h3>
+                <ol>
+                    <li>Plug a USB drive into your PC</li>
+                    <li>Copy <a href="#" class="gcode-link" id="gcodeDownload">M8803.gcode</a> to your USB drive</li>
+                    <li>Eject the USB drive from your PC</li>
+                    <li>Plug the same USB drive into your Centauri Carbon</li>
+                    <li>Go to the files menu and print M8803.gcode</li>
+                    <li>Unplug the USB drive after clicking finish</li>
+                    <li>Plug the same USB drive back into your computer</li>
+                    <li>Upload printer.cfg from the USB drive to the website</li>
+                </ol>
+            </div>
             <div class="file-input-wrapper">
                 <input type="file" id="fileInput" accept=".cfg,.txt">
                 <label for="fileInput" class="file-input-label">Choose printer.cfg file</label>
@@ -229,6 +282,20 @@
 
         let parsedProfiles = {};
         let currentProfile = null;
+
+        // Create downloadable M8803.gcode file
+        document.getElementById('gcodeDownload').addEventListener('click', function(e) {
+            e.preventDefault();
+            const blob = new Blob(['M8803'], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'M8803.gcode';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
 
         function showError(message) {
             const errorContainer = document.getElementById('errorContainer');
