@@ -414,17 +414,19 @@
             const diff = corners[pos] - avgZ;
             if (Math.abs(diff) < 0.2) {
               levelingTips.push(
-                `The ${pos} screw doesn't need to be adjusted.`
+                `Don't bother adjusting the ${pos} screw, it's fine.`
               );
             } else if (diff > 0) {
+              // Corner is HIGHER than average - need to bring it DOWN by tightening
               const turns = getTurns(diff);
               levelingTips.push(
-                `Loosen the screw on the ${pos} by ${turns} turn(s)`
+                `Tighten the screw on the ${pos} by ${turns} turn(s)`
               );
             } else {
+              // Corner is LOWER than average - need to bring it UP by loosening
               const turns = getTurns(-diff);
               levelingTips.push(
-                `Tighten the screw on the ${pos} by ${turns} turn(s)`
+                `Loosen the screw on the ${pos} by ${turns} turn(s)`
               );
             }
           });
