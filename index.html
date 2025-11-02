@@ -404,32 +404,88 @@
 
         let levelingTips = [];
         if (flatnessDev > 0.3) {
+          levelingTips.push(
+            "Tighten all screws to the maximum possible. Do not overtighten."
+          );
+
           const positions = [
             "front left",
             "front right",
             "back left",
             "back right",
           ];
+
+          // First pass: calculate initial adjustments for each position
+          const adjustments = {};
+
           positions.forEach((pos) => {
             const diff = corners[pos] - avgZ;
             if (Math.abs(diff) < 0.2) {
+              adjustments[pos] = { type: "don't adjust", turns: 0 };
+            } else if (diff > 0) {
+              // Corner is HIGHER than average - would need tightening
+              const turns = getTurns(diff);
+              adjustments[pos] = { type: "tighten", turns: turns };
+            } else {
+              // Corner is LOWER than average - needs loosening
+              const turns = getTurns(-diff);
+              adjustments[pos] = { type: "loosen", turns: turns };
+            }
+          });
+
+          // Second pass: convert tighten instructions to loosen instructions
+          // Calculate total loosening needed for each screw
+          const totalLoosening = {};
+          positions.forEach((pos) => {
+            totalLoosening[pos] =
+              adjustments[pos].type === "loosen" ? adjustments[pos].turns : 0;
+          });
+
+          // For each screw that needs tightening, add its turns to all other screws
+          positions.forEach((pos) => {
+            if (adjustments[pos].type === "tighten") {
+              const tightenTurns = adjustments[pos].turns;
+              positions.forEach((otherPos) => {
+                if (otherPos !== pos) {
+                  totalLoosening[otherPos] =
+                    (totalLoosening[otherPos] || 0) + tightenTurns;
+                }
+              });
+            }
+          });
+
+          // Third pass: generate output in the same order
+          positions.forEach((pos) => {
+            const originalAdjustment = adjustments[pos];
+
+            if (originalAdjustment.type === "tighten") {
+              // Convert tighten to "don't adjust"
+              levelingTips.push(
+                `The ${pos} screw doesn't need to be adjusted.`
+              );
+            } else if (
+              originalAdjustment.type === "loosen" ||
+              totalLoosening[pos] > 0
+            ) {
+              // Output the total loosening needed
+              const totalTurns = totalLoosening[pos];
+              if (totalTurns > 0) {
+                levelingTips.push(
+                  `Loosen the screw on the ${pos} by ${totalTurns} turn(s)`
+                );
+              } else {
+                levelingTips.push(
+                  `Don't bother adjusting the ${pos} screw, it's fine.`
+                );
+              }
+            } else {
+              // Original "don't adjust"
               levelingTips.push(
                 `Don't bother adjusting the ${pos} screw, it's fine.`
               );
-            } else if (diff > 0) {
-              // Corner is HIGHER than average - need to bring it DOWN by tightening
-              const turns = getTurns(diff);
-              levelingTips.push(
-                `Tighten the screw on the ${pos} by ${turns} turn(s)`
-              );
-            } else {
-              // Corner is LOWER than average - need to bring it UP by loosening
-              const turns = getTurns(-diff);
-              levelingTips.push(
-                `Loosen the screw on the ${pos} by ${turns} turn(s)`
-              );
             }
           });
+
           levelingTips.push(
             "Rerun leveling and upload a new printer.cfg to see the new results."
           );
